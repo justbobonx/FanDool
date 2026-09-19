@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Fan Dool</title>
+  <style>
+    :root {
+      --bg: #070b12;
+      --bg-2: #0c1422;
+      --blue: #3ec6ff;
+      --blue-dim: #1a6fa3;
+      --text: #e8f4ff;
+      --muted: #7a93a8;
+      --btn: #1494d4;
+      --btn-hover: #1eb0f5;
+      --grey: #4a5563;
+      --win: #5cffb2;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html, body {
+      height: 100%;
+      background:
+        radial-gradient(ellipse at top, #102033 0%, var(--bg) 55%);
+      color: var(--text);
+      font-family: "Segoe UI", system-ui, sans-serif;
+    }
+
+    body {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-height: 100vh;
+      min-height: 100dvh;
+      overflow: hidden;
+    }
+
+    header {
+      width: 100%;
+      padding: 1.4rem 1rem 0.6rem;
+      text-align: center;
+    }
+
+    h1 {
+      font-size: clamp(2.4rem, 8vw, 4.2rem);
+      font-weight: 800;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--blue);
+      text-shadow:
+        0 0 8px rgba(62, 198, 255, 0.7),
+        0 0 24px rgba(62, 198, 255, 0.35),
+        0 0 48px rgba(20, 148, 212, 0.2);
+    }
+
+    main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 1.4rem;
+      width: 100%;
+      max-width: 420px;
+      padding: 1rem 1.25rem 3rem;
+    }
+
+    label {
+      font-size: 0.85rem;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+
+    .amount-wrap {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.45rem;
+      width: 100%;
+    }
+
+    select {
+      width: 100%;
+      appearance: none;
+      background: var(--bg-2);
+      color: var(--text);
+      border: 1px solid var(--blue-dim);
+      border-radius: 10px;
+      padding: 0.9rem 1rem;
+      font-size: 1.35rem;
+      font-weight: 700;
+      text-align: center;
+      cursor: pointer;
+      box-shadow: inset 0 0 18px rgba(62, 198, 255, 0.06);
+    }
+
+    select:disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
+    }
+
+    button {
+      width: 100%;
+      border: none;
+      border-radius: 12px;
+      padding: 1.05rem 1rem;
+      font-size: 1.35rem;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      cursor: pointer;
+      color: #041018;
+      background: linear-gradient(180deg, var(--btn-hover), var(--btn));
+      box-shadow: 0 0 22px rgba(30, 176, 245, 0.35);
+      transition: background 0.2s, box-shadow 0.2s, transform 0.08s, color 0.2s;
+    }
+
+    button:hover:not(:disabled) {
+      transform: translateY(-1px);
+      box-shadow: 0 0 28px rgba(30, 176, 245, 0.5);
+    }
+
+    button:active:not(:disabled) {
+      transform: translateY(1px);
+    }
+
+    button:disabled,
+    button.grey {
+      background: var(--grey);
+      color: #c5cdd6;
+      box-shadow: none;
+      cursor: default;
+    }
+
+    #cashIn {
+      display: none;
+      background: linear-gradient(180deg, #7dffc4, #2fd48a);
+      box-shadow: 0 0 22px rgba(92, 255, 178, 0.35);
+    }
+
+    #status {
+      min-height: 3.2rem;
+      font-size: 1.25rem;
+      font-weight: 600;
+      letter-spacing: 0.04em;
+      color: var(--blue);
+      text-align: center;
+      opacity: 0;
+      transition: opacity 0.25s ease;
+    }
+
+    #status.show { opacity: 1; }
+
+    #payout {
+      display: none;
+      font-size: 2.4rem;
+      font-weight: 800;
+      color: var(--win);
+      text-shadow: 0 0 16px rgba(92, 255, 178, 0.45);
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Fan Dool</h1>
+  </header>
+
+  <main>
+    <div class="amount-wrap" id="amountWrap">
+      <label for="amount">Dollar amount</label>
+      <select id="amount">
+        <option value="5">$5</option>
+        <option value="10">$10</option>
+        <option value="25" selected>$25</option>
+        <option value="50">$50</option>
+        <option value="100">$100</option>
+        <option value="250">$250</option>
+        <option value="500">$500</option>
+        <option value="1000">$1000</option>
+      </select>
+    </div>
+
+    <button id="betBtn" type="button">Bet it All!</button>
+    <div id="status" aria-live="polite"></div>
+    <div id="payout"></div>
+    <button id="cashIn" type="button">CASH IN!</button>
+  </main>
+
+  <script>
+    const lines = [
+      "Placing bet...",
+      "Game starting...",
+      "Woah, score!",
+      "Halftime...",
+      "Another score!",
+      "It's over",
+      "Steve wins!!!"
+    ];
+
+    const amountEl = document.getElementById("amount");
+    const betBtn = document.getElementById("betBtn");
+    const statusEl = document.getElementById("status");
+    const payoutEl = document.getElementById("payout");
+    const cashIn = document.getElementById("cashIn");
+    const amountWrap = document.getElementById("amountWrap");
+
+    function wait(ms) {
+      return new Promise((resolve) => setTimeout(resolve, ms));
+    }
+
+    function showStatus(text) {
+      statusEl.classList.remove("show");
+      return wait(180).then(() => {
+        statusEl.textContent = text;
+        statusEl.classList.add("show");
+      });
+    }
+
+    betBtn.addEventListener("click", async () => {
+      const dollars = Number(amountEl.value);
+      betBtn.disabled = true;
+      betBtn.classList.add("grey");
+      amountEl.disabled = true;
+
+      for (const line of lines) {
+        await showStatus(line);
+        await wait(1000 + Math.random() * 1000);
+      }
+
+      payoutEl.textContent = "$" + dollars;
+      payoutEl.style.display = "block";
+      cashIn.style.display = "block";
+    });
+
+    cashIn.addEventListener("click", () => {
+      statusEl.classList.remove("show");
+      statusEl.textContent = "";
+      payoutEl.style.display = "none";
+      payoutEl.textContent = "";
+      cashIn.style.display = "none";
+      betBtn.disabled = false;
+      betBtn.classList.remove("grey");
+      amountEl.disabled = false;
+      amountWrap.style.display = "flex";
+    });
+  </script>
+</body>
+</html>
